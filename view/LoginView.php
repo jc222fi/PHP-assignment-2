@@ -35,7 +35,12 @@ class LoginView
 			$inputPassword = $this->getProvidedPassword();
 			if(!$inputName==null){
 				if(!$inputPassword==null){
-					$message = "Do stuff";
+					if($this->users->getUserByName($inputName, $inputPassword)){
+						$message = "Found user";
+					}
+					else{
+						$message = "Wrong name or password";
+					}
 				}
 				else{
 					$message="Password is missing";

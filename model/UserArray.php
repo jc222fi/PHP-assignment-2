@@ -11,11 +11,12 @@ class UserArray{
     public function getUsers(){
         return $this->users;
     }
-    public function getUserByName($userName){
+    public function getUserByName($userName, $userPassword){
         foreach($this->users as $user){
-            if($user->getName() == $userName){
-                return $user;
+            if(($user->getName() == $userName)&&($user->getPassword() == $userPassword)){
+                return true;
             }
+            return false;
         }
     }
 }
