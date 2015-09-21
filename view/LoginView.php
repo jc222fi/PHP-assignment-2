@@ -1,7 +1,5 @@
 <?php
-
 namespace view;
-
 class LoginView
 {
 	private static $login = 'LoginView::Login';
@@ -12,8 +10,8 @@ class LoginView
 	private static $cookiePassword = 'LoginView::CookiePassword';
 	private static $keep = 'LoginView::KeepMeLoggedIn';
 	private static $messageId = 'LoginView::Message';
-
 	private $users;
+	private $message = '';
 
 	public function __construct(\model\UserArray $users){
 		$this->users = $users;
@@ -27,39 +25,19 @@ class LoginView
 	 */
 	public function response()
 	{
-		$message = '';
-		$inputName = '';
-		if (isset($_POST[self::$login])){
-
-			$inputName = $this->getProvidedUsername();
-			$inputPassword = $this->getProvidedPassword();
-			if(!$inputName==null){
-				if(!$inputPassword==null){
-					if($this->users->getUserByName($inputName, $inputPassword)){
-						$message = "Found user";
-					}
-					else{
-						$message = "Wrong name or password";
-					}
-				}
-				else{
-					$message="Password is missing";
-				}
-			}
-			else{
-				$message = "Username is missing";
-			}
+		if($this->message != "Welcome") {
+			$response = $this->generateLoginFormHTML($this->getProvidedUsername());
 		}
-		$response = $this->generateLoginFormHTML($message, $inputName);
-		//$response .= $this->generateLogoutButtonHTML($message);
+		else {
+			$response = $this->generateLogoutButtonHTML($this->message);
+		}
 		return $response;
 	}
-
 	/**
-	* Generate HTML code on the output buffer for the logout button
-	* @param $message, String output message
-	* @return  void, BUT writes to standard output!
-	*/
+	 * Generate HTML code on the output buffer for the logout button
+	 * @param $message, String output message
+	 * @return  void, BUT writes to standard output!
+	 */
 	private function generateLogoutButtonHTML($message) {
 		return '
 			<form  method="post" >
@@ -68,25 +46,23 @@ class LoginView
 			</form>
 		';
 	}
-	
+
 	/**
-	* Generate HTML code on the output buffer for the logout button
-	* @param $message, String output message
-	* @return  void, BUT writes to standard output!
-	*/
-	private function generateLoginFormHTML($message, $inputName) {
+	 * Generate HTML code on the output buffer for the logout button
+	 * @param $message, String output message
+	 * @return  void, BUT writes to standard output!
+	 */
+	private function generateLoginFormHTML($inputName) {
 		return '
 			<form method="post" > 
 				<fieldset>
 					<legend>Login - enter Username and password</legend>
-					<p id="' . self::$messageId . '">' . $message . '</p>
+					<p id="' . self::$messageId . '">' . $this->message . '</p>
 					
 					<label for="' . self::$name . '">Username :</label>
 					<input type="text" id="' . self::$name . '" name="' . self::$name . '" value="'. $inputName .'" />
-
 					<label for="' . self::$password . '">Password :</label>
 					<input type="password" id="' . self::$password . '" name="' . self::$password . '" />
-
 					<label for="' . self::$keep . '">Keep me logged in  :</label>
 					<input type="checkbox" id="' . self::$keep . '" name="' . self::$keep . '" />
 					
@@ -95,27 +71,42 @@ class LoginView
 			</form>
 		';
 	}
-
-	private function getProvidedUsername(){
+	public function getProvidedUsername(){
 		if(isset($_POST[self::$name])) {
 			$inputName = $_POST[self::$name];
-
 			return $inputName;
 		}
 		return null;
 	}
-	private function getProvidedPassword(){
+	public function getProvidedPassword(){
 		if(isset($_POST[self::$password])) {
 			$inputPassword = $_POST[self::$password];
-
 			return $inputPassword;
 		}
 		return null;
 	}
-
+	public function userWantsToLogin(){
+		if(isset($_POST[self::$login])){
+			return true;
+		}
+		return false;
+	}
+	public function presentLoginMessage(\model\Credentials $credentials){
+		if($credentials->getUserName()==null){
+			$this->message="Username is missing";
+		}
+		else if($credentials->getUserPassword()==null){
+			$this->message="Password is missing";
+		}
+		else if(($this->users->getUserByName($credentials->getUserName())==null)||$this->users->getUserByName($credentials->getUserName())->getPassword()!=$credentials->getUserPassword()){
+			$this->message="Wrong name or password";
+		}
+		else{
+			$this->message="Welcome";
+		}
+	}
 	//CREATE GET-FUNCTIONS TO FETCH REQUEST VARIABLES
 	private function getRequestUserName() {
 		//RETURN REQUEST VARIABLE: USERNAME
 	}
-
 }
