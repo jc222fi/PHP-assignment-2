@@ -2,38 +2,36 @@
 
 namespace model;
 
+//No constructor function because this class should not initiate anything, only receive data and perform actions with that data
 class LoginModel{
-    private $userCredentials;
-    private $users;
-    private $loginOK;
 
-    public function __construct(Credentials $userCredentials, UserArray $users){
-        $this->userCredentials = $userCredentials;
-        $this->users = $users;
-        $this->loginOK = false;
-    }
-    public function tryLogin(){
-        if($this->userCredentials->getUserName()==null){
-            $this->loginOK = false;
-            //$this->loginStatus["MissingUsername"] = $this->statusMessage;
+    //Function to make a login attempt with provided credentials compared to available user logins
+    public function tryLogin(Credentials $userCredentials, UserArray $users){
+
+        //First check to make sure the user is not already logged in (this is also checked in controller, but I prefer to check in all places to minimize errors)
+        if(!$this->isUserLoggedIn()){
+
+            //If input matches any saved user, return true (successful login attempt) and save in session variable as 'logged in'
+            if(($users->getUserByName($userCredentials->getUserName())!=null)&&
+                (password_verify($userCredentials->getUserPassword(), $users->getUserByName($userCredentials->getUserName())->getPassword()))){
+                $_SESSION['LoggedIn']= $userCredentials->getUserName();
+                return true;
+            }
         }
-        else if($this->userCredentials->getUserPassword()==null){
-            $this->loginOK = false;
-            //$this->loginStatus["MissingPassword"] = $this->statusMessage;
+        //In all other cases, return false
+        return false;
+    }
+    //Unset the session variable when user chooses to logout
+    public function logOut(){
+        unset($_SESSION['LoggedIn']);
+    }
+    public function isUserLoggedIn() {
+        //Check session variable to see if user is set as logged in
+        if (isset($_SESSION['LoggedIn'])) {
+            return true;
         }
         else{
-            if(($this->users->getUserByName($this->userCredentials->getUserName())==null)||$this->users->getUserByName($this->userCredentials->getUserName())->getPassword()!=$this->userCredentials->getUserPassword()){
-                $this->loginOK = false;
-                //$this->loginStatus["NoMatch"] = $this->statusMessage;
-            }
-            else{
-                $this->loginOK = true;
-                //$this->loginStatus["Welcome"] = $this->statusMessage;
-            }
+            return false;
         }
-        return $this->loginOK;
-    }
-    public function getLoginOK(){
-        return $this->loginOK;
     }
 }

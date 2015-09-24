@@ -7,8 +7,8 @@ class Credentials{
     private $userPassword;
 
     public function __construct($userName, $userPassword){
-        $this->userName = $userName;
-        $this->userPassword = $userPassword;
+        assert(is_string($this->userName = $userName));
+        assert(is_string($this->userPassword = $userPassword));
     }
     public function setUserName($userName){
         $this->userName = $userName;

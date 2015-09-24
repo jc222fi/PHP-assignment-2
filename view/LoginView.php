@@ -1,5 +1,7 @@
 <?php
+
 namespace view;
+
 class LoginView
 {
 	private static $login = 'LoginView::Login';
@@ -10,11 +12,11 @@ class LoginView
 	private static $cookiePassword = 'LoginView::CookiePassword';
 	private static $keep = 'LoginView::KeepMeLoggedIn';
 	private static $messageId = 'LoginView::Message';
-	private $users;
 	private $message = '';
+	private $loginModel;
 
-	public function __construct(\model\UserArray $users){
-		$this->users = $users;
+	public function __construct(){
+		$this->loginModel = new\model\LoginModel();
 	}
 	/**
 	 * Create HTTP response
@@ -25,7 +27,9 @@ class LoginView
 	 */
 	public function response()
 	{
-		if($this->message != "Welcome") {
+		//Check if user is logged in or not and generates form depending on result
+		if(!$this->loginModel->isUserLoggedIn()) {
+
 			$response = $this->generateLoginFormHTML($this->getProvidedUsername());
 		}
 		else {
@@ -49,9 +53,11 @@ class LoginView
 
 	/**
 	 * Generate HTML code on the output buffer for the logout button
-	 * @param $message, String output message
 	 * @return  void, BUT writes to standard output!
 	 */
+
+	//Receives information about what username the user wants to login with, if username OR password is incorrect,
+	//attempted username will be saved in form for next attempt
 	private function generateLoginFormHTML($inputName) {
 		return '
 			<form method="post" > 
@@ -71,42 +77,53 @@ class LoginView
 			</form>
 		';
 	}
+	//Get username sent with form and strip from tags in case someone tries javascript injections
 	public function getProvidedUsername(){
 		if(isset($_POST[self::$name])) {
 			$inputName = $_POST[self::$name];
-			return $inputName;
+			return strip_tags($inputName);
 		}
 		return null;
 	}
+	//Get password sent with form and strip from tags in case someone tries javascript injections
 	public function getProvidedPassword(){
 		if(isset($_POST[self::$password])) {
 			$inputPassword = $_POST[self::$password];
-			return $inputPassword;
+			return strip_tags($inputPassword);
 		}
 		return null;
 	}
 	public function userWantsToLogin(){
 		if(isset($_POST[self::$login])){
-			return true;
+			if(!$this->loginModel->isUserLoggedIn()){
+				return true;
+			}
 		}
 		return false;
 	}
-	public function presentLoginMessage(\model\Credentials $credentials){
+    public function userWantsToLogout(){
+        if(isset($_POST[self::$logout])){
+			if($this->loginModel->isUserLoggedIn()){
+				$this->message="Bye bye!";
+				return true;
+			}
+        }
+        return false;
+    }
+	//Receives information about
+	public function presentLoginMessage(\model\Credentials $credentials, \model\UserArray $users){
 		if($credentials->getUserName()==null){
 			$this->message="Username is missing";
 		}
 		else if($credentials->getUserPassword()==null){
 			$this->message="Password is missing";
 		}
-		else if(($this->users->getUserByName($credentials->getUserName())==null)||$this->users->getUserByName($credentials->getUserName())->getPassword()!=$credentials->getUserPassword()){
+		else if(($users->getUserByName($credentials->getUserName())==null)||
+				(!password_verify($credentials->getUserPassword(), $users->getUserByName($credentials->getUserName())->getPassword()))){
 			$this->message="Wrong name or password";
 		}
 		else{
 			$this->message="Welcome";
 		}
-	}
-	//CREATE GET-FUNCTIONS TO FETCH REQUEST VARIABLES
-	private function getRequestUserName() {
-		//RETURN REQUEST VARIABLE: USERNAME
 	}
 }

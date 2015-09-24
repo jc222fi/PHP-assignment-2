@@ -3,7 +3,8 @@
 namespace view;
 
 class LayoutView {
-  
+
+  //Receives information about if the user is logged in or not, and renders header according to result of boolean
   public function render($isLoggedIn, LoginView $v, DateTimeView $dtv) {
     echo '<!DOCTYPE html>
       <html>

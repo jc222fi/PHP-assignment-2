@@ -9,32 +9,37 @@ class LoginController{
     private $loginView;
     private $layoutView;
     private $dateTimeView;
-    private $loginOK = false;
 
     public function __construct(\model\UserArray $users){
         $this->users=$users;
         $this->layoutView = new \view\LayoutView();
         $this->loginView = new \view\LoginView($this->users);
         $this->dateTimeView = new \view\DateTimeView();
+        $this->loginModel = new \model\LoginModel();
     }
     public function doApplication(){
-        if($this->loginView->userWantsToLogin()){
-            $this->userCredentials = new \model\Credentials($this->loginView->getProvidedUsername(), $this->loginView->getProvidedPassword());
-            $this->loginModel = new \model\LoginModel($this->userCredentials, $this->users);
-            $this->loginModel->tryLogin();
-            $this->loginOK = $this->loginModel->getLoginOK();
-            $this->loginView->presentLoginMessage($this->userCredentials);
-            //$inputName = $this->loginView->checkUserLogin($this->loginView->getProvidedUsername(), $this->loginView->getProvidedPassword());
+        //If user is not logged in
+        if(!$this->loginModel->isUserLoggedIn()) {
+            if ($this->loginView->userWantsToLogin()) {
+                //Setup model for storing input
+                $this->userCredentials = new \model\Credentials($this->loginView->getProvidedUsername(), $this->loginView->getProvidedPassword());
 
-            $this->loginView->response();
+                //Try Login with the provided credentials from the submitted form and display feedback depending on the submitted credentials
+                $this->loginModel->tryLogin($this->userCredentials, $this->users);
+                $this->loginView->presentLoginMessage($this->userCredentials, $this->users);
+
+                //Response from login attempt
+                $this->loginView->response();
+            }
+        }
+        else if($this->loginModel->isUserLoggedIn()){
+            if ($this->loginView->userWantsToLogout()) {
+                $this->loginModel->logOut();
+            }
         }
     }
+    //Present correct view depending on result from login attempt
     public function getView(){
-        if($this->loginOK){
-            return $this->layoutView->render(true, $this->loginView, $this->dateTimeView);
-        }
-        else{
-            return $this->layoutView->render(false, $this->loginView, $this->dateTimeView);
-        }
+        return $this->layoutView->render($this->loginModel->isUserLoggedIn(), $this->loginView, $this->dateTimeView);
     }
 }

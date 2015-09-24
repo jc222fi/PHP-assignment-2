@@ -12,21 +12,20 @@ require_once('model/LoginModel.php');
 
 require_once('controller/LoginController.php');
 
+session_start();
+
 //MAKE SURE ERRORS ARE SHOWN... MIGHT WANT TO TURN THIS OFF ON A PUBLIC SERVER
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
+//Create my models I need as a base for my login page
 $users = new \model\UserArray();
 $user = new \model\User("Admin", "Password");
-
 $users->addUser($user);
+
+//Initiate controller and start application functionality
 $controller=new \controller\LoginController($users);
+
 $controller->doApplication();
+
 $controller->getView();
-
-//CREATE OBJECTS OF THE VIEWS
-// $v = new \view\LoginView($users);
-// $dtv = new \view\DateTimeView();
-// $lv = new \view\LayoutView();
-
-// $lv->render(false, $v, $dtv);
